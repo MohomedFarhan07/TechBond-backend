@@ -1,0 +1,24 @@
+{
+  "name": "techbond-backend",
+  "version": "1.0.0",
+  "description": "This is a chat application for the developers,",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/app.js",
+    "start": "node src/app.js"
+  },
+  "keywords": [
+    "Javascript",
+    "node",
+    "express"
+  ], 
+  "author": "Mohomed Farhan",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
