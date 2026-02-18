@@ -2,16 +2,53 @@ const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const app = express();
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
   try {
-    const user = new User(req.body);
+    // validate the data
+    validateSignUpData(req);
+
+    const { password, firstName, lastName, emailId } = req.body;
+
+    // Encrypt the password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
+
     res.send("User added successfully");
   } catch (err) {
     res.status(400).send(err.message);
+  }
+});
+
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId , password } = req.body;
+
+    const user = await User.findOne({ emailId: emailId });
+    
+    if (!user) {
+      throw new Error("Invalid credentials!!!");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      res.send("User logged in succussfully...");
+    } else {
+      throw new Error("Invalid credentials!!!")
+    }
+  } catch (err) {
+    res.status(400).send("ERROR: " + err.message);
   }
 });
 
@@ -29,11 +66,27 @@ app.delete("/user", async (req, res) => {
   res.send("User deleted successfully...");
 });
 
-app.patch("/user", async (req, res) => {
-  const userId = req.body.userId;
+app.patch("/user/:userId", async (req, res) => {
+  const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age", "skills"];
+
+  const userId = req.params?.userId;
   const data = req.body;
+
+  const isUpdateAllowed = Object.keys(data).every((k) =>
+    ALLOWED_UPDATES.includes(k),
+  );
+
+  if (data?.skills.length > 10) {
+    return res.status(400).send("Too many skills!!!");
+  }
+
+  if (!isUpdateAllowed) {
+    return res.status(400).send("Update not allowed!!");
+  }
+
   const user = await User.findByIdAndUpdate(userId, data, {
-    runValidators: true
+    returnDocument: "after",
+    runValidators: true,
   });
   res.send(user);
 });
