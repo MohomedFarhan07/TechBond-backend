@@ -4,8 +4,11 @@ const User = require("./models/user");
 const app = express();
 const { validateSignUpData } = require("./utils/validation");
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const { userAuth } = require("./middlewares/auth");
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -33,71 +36,36 @@ app.post("/signup", async (req, res) => {
 
 app.post("/login", async (req, res) => {
   try {
-    const { emailId , password } = req.body;
+    const { emailId, password } = req.body;
 
     const user = await User.findOne({ emailId: emailId });
-    
+
     if (!user) {
       throw new Error("Invalid credentials!!!");
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
+      // Create a JWT Token
+      const token = await user.getJWT();
+
+      // Add the token to cookie and send the response back to the server...
+      res.cookie("token", token);
       res.send("User logged in succussfully...");
     } else {
-      throw new Error("Invalid credentials!!!")
+      throw new Error("Invalid credentials!!!");
     }
   } catch (err) {
     res.status(400).send("ERROR: " + err.message);
   }
 });
 
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
-  const user = await User.findOne({ emailId: userEmail });
-  if (user.length === 0) return res.status(404).send("User not found");
-  res.send(user);
-});
-
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-  const user = await User.findByIdAndDelete(userId);
-
-  res.send("User deleted successfully...");
-});
-
-app.patch("/user/:userId", async (req, res) => {
-  const ALLOWED_UPDATES = ["photoUrl", "about", "gender", "age", "skills"];
-
-  const userId = req.params?.userId;
-  const data = req.body;
-
-  const isUpdateAllowed = Object.keys(data).every((k) =>
-    ALLOWED_UPDATES.includes(k),
-  );
-
-  if (data?.skills.length > 10) {
-    return res.status(400).send("Too many skills!!!");
-  }
-
-  if (!isUpdateAllowed) {
-    return res.status(400).send("Update not allowed!!");
-  }
-
-  const user = await User.findByIdAndUpdate(userId, data, {
-    returnDocument: "after",
-    runValidators: true,
-  });
-  res.send(user);
-});
-
-app.get("/feed", async (req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-    const users = await User.find({});
-
-    res.send(users);
+    const user = req.user;
+    res.send(user);
   } catch (err) {
-    res.status(404).send(err.message);
+    res.status(400).send("ERROR: " + err.message);
   }
 });
 
