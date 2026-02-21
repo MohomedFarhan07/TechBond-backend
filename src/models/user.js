@@ -56,11 +56,6 @@ const userSchema = new Schema(
     photoUrl: {
       type: String,
       default: "https://template-vault.vercel.app/avatar4.png",
-      validate(value) {
-        if (!validator.isURL(value)) {
-          throw new Error("Enter a valid URL");
-        }
-      },
     },
     about: {
       type: String,
