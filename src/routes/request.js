@@ -4,6 +4,8 @@ const { userAuth } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
 
+const sendEmail = require("../utils/sendEmail");
+
 requestRouter.post(
   "/request/send/:status/:toUserId",
   userAuth,
@@ -44,6 +46,11 @@ requestRouter.post(
       });
 
       await connectionRequest.save();
+
+      const emailRes = await sendEmail.run(
+        "A new friend request from " + req.user.firstname,
+        req.user.firstname + " is " + status + " in " + toUser.firstname,
+      );
 
       res.json({
         message: `${req.user.firstName} ${req.user.lastName} is ${status} ${toUser.firstName} ${toUser.lastName}`,
