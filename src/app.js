@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http = require("http");
 const initializeSocket = require("./utils/socket.js");
+require("dotenv").config();
 
 app.use(
   cors({
@@ -35,7 +36,7 @@ initializeSocket(server);
 connectDB()
   .then(() => {
     console.log("Database connection is established...");
-    server.listen(3000, () => {
+    server.listen(process.env.PORT, () => {
       console.log("Successfully listening to the port 3000...");
     });
   })
