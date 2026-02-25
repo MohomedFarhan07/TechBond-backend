@@ -66,6 +66,13 @@ const userSchema = new Schema(
     skills: {
       type: [String],
     },
+    isPremium: {
+      type: String,
+      default: false,
+    },
+    membershipType: {
+      type: String,
+    }
   },
   { timestamps: true },
 );
