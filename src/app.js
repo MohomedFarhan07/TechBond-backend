@@ -5,7 +5,10 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http = require("http");
 const initializeSocket = require("./utils/socket.js");
+
 require("dotenv").config();
+
+require("./utils/cronjob.js")
 
 app.use(
   cors({
